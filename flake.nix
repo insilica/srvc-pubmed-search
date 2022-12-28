@@ -10,9 +10,9 @@
     flake-utils.lib.eachDefaultSystem (system:
       with import nixpkgs { inherit system; };
       let
-        my-python = python3.withPackages(ps: with ps; [ps.biopython]);
-        pubmed = stdenv.mkDerivation {
-          pname = "pubmed";
+        my-python = python3.withPackages (ps: with ps; [ ps.biopython ]);
+        pubmed-search = stdenv.mkDerivation {
+          pname = "pubmed-search";
           version = "0.1.0";
           src = ./src;
           buildInputs = [ my-python ];
@@ -23,10 +23,12 @@
         };
       in {
         packages = {
-          inherit pubmed;
-          default = pubmed;
+          inherit pubmed-search;
+          default = pubmed-search;
         };
-        devShells.default =
-          mkShell { buildInputs = [ my-python pubmed srvc.packages.${system}.default ]; };
+        devShells.default = mkShell {
+          buildInputs =
+            [ my-python pubmed-search srvc.packages.${system}.default ];
+        };
       });
 }
