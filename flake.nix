@@ -10,7 +10,7 @@
     flake-utils.lib.eachDefaultSystem (system:
       with import nixpkgs { inherit system; };
       let
-        my-python = python3.withPackages (ps: with ps; [ ps.biopython ]);
+        my-python = python3.withPackages (ps: with ps; [ biopython xmltodict ]);
         pubmed-search = stdenv.mkDerivation {
           pname = "pubmed-search";
           version = "0.1.0";
