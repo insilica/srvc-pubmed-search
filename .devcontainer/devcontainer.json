@@ -18,7 +18,7 @@
     "overrideCommand": false,
     "userEnvProbe": "loginShell",
     "updateRemoteUserUID": false,
-    "onCreateCommand": "nix-shell --command 'echo done building nix dev environment'",
+    "onCreateCommand": "nix shell -c echo done building nix dev environment",
     "extensions": [
         "arrterian.nix-env-selector"
     ],
