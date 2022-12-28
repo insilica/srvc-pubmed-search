@@ -30,7 +30,7 @@
         "codespaces": {
             "openFiles": [
                 "README.md",
-                "sr.yaml"
+                "src/pubmed-search.py"
             ]
         }
     }
