@@ -22,6 +22,8 @@ def get_abstract(article):
         if isinstance(texts, str):
             return texts
         abstract = ''
+        if not isinstance(texts, list):
+            texts = [texts]
         for x in texts:
             text = x.get('#text')
             if text:
