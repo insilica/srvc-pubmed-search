@@ -15,12 +15,34 @@ if not query:
     print("No query specified", file=sys.stderr)
     sys.exit(1)
 
+def get_abstract(article):
+    abstract = article['PubmedArticleSet']['PubmedArticle']['MedlineCitation']['Article'].get('Abstract')
+    if abstract:
+        texts = abstract.get('AbstractText')
+        if isinstance(texts, str):
+            return texts
+        abstract = ''
+        for x in texts:
+            text = x.get('#text')
+            if text:
+                if abstract:
+                    abstract += '\n\n'
+                abstract += text
+        if abstract:
+            return abstract
+
+def get_title(article):
+    return article['PubmedArticleSet']['PubmedArticle']['MedlineCitation']['Article'].get('ArticleTitle')
+
 def get_article(id):
     handle = Entrez.efetch(db="pubmed", id=id, rettype="xml", retmode="text")
     article = handle.read()
     handle.close()
+    article = xmltodict.parse(article)
+    article['abstract'] = get_abstract(article)
+    article['title'] = get_title(article)
     return {
-        "data": xmltodict.parse(article),
+        "data": article,
         "type": "document",
         "url": "https://www.ncbi.nlm.nih.gov/pubmed/" + id,
     }
