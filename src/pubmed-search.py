@@ -10,7 +10,7 @@ ohost, oport = os.environ["SR_OUTPUT"].split(":")
 sr_output = socket.create_connection((ohost, int(oport)))
 config = json.load(open(os.environ['SR_CONFIG']))
 Entrez.email = config['reviewer']
-query = config['current_step'].get('query')
+query = (config['current-step'] or config['current_step']).get('query')
 if not query:
     print("No query specified", file=sys.stderr)
     sys.exit(1)
