@@ -357,7 +357,7 @@
      :env {::ds/start (constantly env)}
      :hato (hato-component (ds/local-ref [:config :hato]))
      :http-server (http-server-component
-                   {:api-key (ds/local-ref [:config :api-key])
+                   {:api-key (ds/local-ref [:env :api-key])
                     :cache-ttl-sec (ds/local-ref [:config :cache-ttl-sec])
                     :chunk-size (ds/local-ref [:config :chunk-size])
                     :hato (ds/local-ref [:hato])
@@ -368,7 +368,8 @@
 
 ;; Not thread-safe. For use by -main and at REPL
 (defn start! []
-  (let [env {:config-file "pubmed-search-config.edn"}]
+  (let [env {:api-key (System/getenv "EUTILS_API_KEY")
+             :config-file "pubmed-search-config.edn"
     (swap! state #(sig/signal! (or % (system env)) ::ds/start))))
 
 ;; Not thread-safe. For use by -main and at REPL
