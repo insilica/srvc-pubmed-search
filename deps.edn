@@ -4,7 +4,7 @@
   org.clojure/data.xml {:mvn/version "0.2.0-alpha8"}
   club.donutpower/system {:mvn/version "0.0.165"
                           :exclusions [tailrecursion/cljs-priority-map]}
-  com.github.insilica/json-parse {:git/sha "897d35ab8623a8bb005d1104dc67f451f7c0018d"}
+  co.insilica/json-parse {:mvn/version "1.0.0"}
   com.github.seancorfield/honeysql {:mvn/version "2.4.969"}
   com.github.seancorfield/next.jdbc {:mvn/version "1.3.847"}
   hashp/hashp {:mvn/version "0.2.2"

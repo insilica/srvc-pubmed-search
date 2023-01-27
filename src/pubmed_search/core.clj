@@ -8,6 +8,7 @@
             [donut.system :as ds]
             [hato.client :as hc]
             [honey.sql :as sql]
+            [json-parse.core :as json-parse]
             [next.jdbc :as jdbc]
             [next.jdbc.result-set :as result-set]
             [org.httpkit.server :as server]
@@ -308,7 +309,7 @@
           (str/join "\n\n" $)))))
 
 (defn pubmed->srvc [doc-xml]
-  (let [doc-json (json-parse.core/xml->json [doc-xml])]
+  (let [doc-json (json-parse/xml->json [doc-xml])]
     {:data (-> doc-json
                (assoc :abstract (doc-abstract doc-json)
                       :title (doc-title doc-json)))
