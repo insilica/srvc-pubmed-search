@@ -12,10 +12,10 @@
             [json-parse.core :as json-parse]
             [next.jdbc :as jdbc]
             [next.jdbc.result-set :as result-set]
-            [org.httpkit.server :as server]
             [reitit.core :as re]
             [reitit.ring :as rr]
             [reitit.ring.middleware.parameters :refer [parameters-middleware]]
+            [ring.adapter.jetty :as raj]
             [salmon.signal :as sig]))
 
 (defonce state (atom nil))
@@ -338,16 +338,16 @@
 (defn http-server-component [config]
   #::ds{:config config
         :start (fn [{:keys [::ds/config]}]
-                 (let [server (server/run-server
+                 (let [server (raj/run-jetty
                                (-> (routes config)
                                    rr/router
                                    rr/ring-handler)
-                               {:legacy-return-value? false
+                               {:join? false
                                 :port (:port config)})]
-                   {:port (server/server-port server)
+                   {:port (-> server .getConnectors (aget 0) .getLocalPort)
                     :server server}))
         :stop (fn [{::ds/keys [instance]}]
-                @(server/server-stop! (:server instance))
+                @(.stop (:server instance))
                 nil)})
 
 (defn system [env]
