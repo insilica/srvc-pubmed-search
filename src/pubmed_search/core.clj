@@ -1,4 +1,5 @@
 (ns pubmed-search.core
+  (:gen-class) ;; This allows compiling as a binary
   (:require hashp.core
             [clojure.data.json :as json]
             [clojure.data.xml :as xml]
