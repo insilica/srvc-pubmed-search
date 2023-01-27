@@ -321,13 +321,15 @@
 
 (defn get-home [{:keys [query-params]} opts]
   (let [q (get query-params "q")]
-    (when (seq q)
+    (if (seq q)
       (->> (get-search-results opts q)
            (get-fetches opts)
            (map pubmed->srvc)
            (map json/write-str)
            (interpose "\n")
-           (hash-map :status 200 :body)))))
+           (hash-map :status 200 :body))
+      {:status 200
+       :body ""})))
 
 (defn routes [opts]
   [["/" {:get #(get-home % opts)
