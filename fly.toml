@@ -1,5 +1,3 @@
-# fly.toml file generated for pubmed-http-server on 2023-01-27T13:15:59-06:00
-
 app = "pubmed-http-server"
 kill_signal = "SIGINT"
 kill_timeout = 5
@@ -8,8 +6,12 @@ processes = []
 [build]
   image = "insilica/pubmed-http-server:latest"
 
+[mounts]
+  source="cache"
+  destination="/cache"
 
 [env]
+  PUBMED_SEARCH_CACHE = "/cache/pubmed-search.sqlite"
 
 [experimental]
   auto_rollback = true

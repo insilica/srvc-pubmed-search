@@ -363,13 +363,14 @@
                     :hato (ds/local-ref [:hato])
                     :port (ds/local-ref [:config :port])
                     :sqlite (ds/local-ref [:sqlite])})
-     :sqlite (sqlite-component {:dbname (ds/local-ref [:config :db])
+     :sqlite (sqlite-component {:dbname (ds/local-ref [:env :db])
                                 :dbtype "sqlite"})}}})
 
 ;; Not thread-safe. For use by -main and at REPL
 (defn start! []
   (let [env {:api-key (System/getenv "EUTILS_API_KEY")
              :config-file "pubmed-search-config.edn"
+             :db (or (System/getenv "PUBMED_SEARCH_CACHE") "pubmed-search.sqlite")}]
     (swap! state #(sig/signal! (or % (system env)) ::ds/start))))
 
 ;; Not thread-safe. For use by -main and at REPL
