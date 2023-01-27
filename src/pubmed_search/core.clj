@@ -198,7 +198,9 @@
     (get-fetches-seq opts (get-fetches-cache opts pmids) (set pmids))))
 
 (defn get-config [filename]
-  (if-let [resource (or (io/resource filename) (io/file filename))]
+  (if-let [resource (if (.exists (io/file filename))
+                      (io/file filename)
+                      (io/resource filename))]
     (with-open [reader (-> resource io/reader java.io.PushbackReader.)]
       (try
         (edn/read reader)
