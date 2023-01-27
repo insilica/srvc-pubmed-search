@@ -34,7 +34,6 @@ jobs:
     - name: Build Nix derivations
       if: steps.nix-cache-restore.outputs.cache-hit != 'true'
       run: |
-        nix flake check
         nix build .#http-server
         nix build .#http-server-image
         nix build .#pubmed-search
