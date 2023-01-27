@@ -4,4 +4,4 @@ set -eu
 
 nix build .#http-server-image
 docker load < ./result
-fly deploy --local-only
+fly deploy --local-only --detach
