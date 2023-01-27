@@ -1,0 +1,55 @@
+name: Deploy to fly.io
+
+on:
+  push:
+    branches:
+      - master
+    paths-ignore:
+      - '**.md'
+
+jobs:
+  deploy-fly-io:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v3
+      with:
+        fetch-depth: 1
+
+    - name: Restore cached Nix store
+      id: nix-cache-restore
+      uses: john-shaffer/cache/restore@main
+      with:
+        key: nix-${{ github.repository }}-${{ hashFiles('**.nix', '**/flake.lock') }}
+        restore-keys: |
+          nix-${{ github.repository }}-
+        path: |
+          /nix/store
+          /nix/var/nix/db/db.sqlite
+
+    - name: Install Nix
+      uses: cachix/install-nix-action@v18
+
+    - name: Build Nix derivations
+      if: steps.nix-cache-restore.outputs.cache-hit != 'true'
+      run: |
+        nix flake check
+        nix build .#http-server
+        nix build .#http-server-image
+        nix build .#pubmed-search
+        nix develop -c echo OK
+
+    - name: Save cached Nix store
+      if: steps.nix-cache-restore.outputs.cache-hit != 'true'
+      uses: actions/cache/save@v3
+      with:
+        key: nix-${{ github.repository }}-${{ hashFiles('**.nix', '**/flake.lock') }}
+        path: |
+          /nix/store
+          /nix/var/nix/db/db.sqlite
+
+    - name: Deploy to fly.io
+      run: nix develop -c bin/deploy
+      env:
+        FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
