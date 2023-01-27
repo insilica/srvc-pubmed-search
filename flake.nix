@@ -28,7 +28,7 @@
         };
         devShells.default = mkShell {
           buildInputs =
-            [ my-python pubmed-search srvc.packages.${system}.default yapf ];
+            [ clojure my-python pubmed-search srvc.packages.${system}.default yapf ];
         };
       });
 }

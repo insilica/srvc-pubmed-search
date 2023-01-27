@@ -1,0 +1,7 @@
+{:cache-ttl-sec 259200
+ :chunk-size 50
+ :db "pubmed-search.sqlite"
+ :hato
+ {:connect-timeout 10000
+  :redirect-policy :always}
+ :port 7881}

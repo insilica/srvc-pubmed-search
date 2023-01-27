@@ -1,0 +1,14 @@
+.*
+*.spacy
+*.sqlite
+.direnv/
+.ipynb_checkpoints/
+result
+spacy-model/
+
+!.devcontainer
+!.editorconfig
+!.envrc
+!.github
+!.gitignore
+!.vscode
