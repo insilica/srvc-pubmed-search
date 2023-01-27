@@ -1,0 +1,7 @@
+#!/usr/bin/env bash
+
+set -eu
+
+nix build .#http-server-image
+docker load < ./result
+docker run --rm --network=host insilica/pubmed-http-server:latest

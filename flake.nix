@@ -3,6 +3,7 @@
 
   inputs = {
     nixpkgs.url = "github:nixos/nixpkgs/nixos-22.05";
+    nixpkgs-unstable.url = "github:nixos/nixpkgs/nixpkgs-unstable";
     flake-utils.url = "github:numtide/flake-utils";
     clj-nix = {
       url = "github:jlesquembre/clj-nix";
@@ -11,10 +12,12 @@
     };
     srvc.url = "github:insilica/rs-srvc";
   };
-  outputs = { self, nixpkgs, flake-utils, clj-nix, srvc, ... }@inputs:
+  outputs =
+    { self, nixpkgs, nixpkgs-unstable, flake-utils, clj-nix, srvc, ... }@inputs:
     flake-utils.lib.eachDefaultSystem (system:
       with import nixpkgs { inherit system; };
       let
+        pkgs-unstable = import nixpkgs-unstable { inherit system; };
         cljpkgs = clj-nix.packages."${system}";
         my-python = python3.withPackages (ps: with ps; [ biopython xmltodict ]);
         pubmed-search = stdenv.mkDerivation {
@@ -29,23 +32,35 @@
         };
         http-server-bin = cljpkgs.mkCljBin {
           projectSrc = ./.;
-          name = "srvc-pubmed-search-http-server";
+          name = "pubmed-http-server";
           main-ns = "pubmed-search.core";
           jdkRunner = pkgs.jdk17_headless;
         };
         # Strips out unused JDK code for a smaller binary
-        http-server = cljpkgs.customJdk {
-          cljDrv = http-server-bin;
+        http-server = cljpkgs.customJdk { cljDrv = http-server-bin; };
+        http-server-image = dockerTools.buildLayeredImage {
+          name = "insilica/pubmed-http-server";
+          tag = "latest";
+          config = {
+            Cmd = clj-nix.lib.mkCljCli {
+              jdkDrv = http-server;
+              java-opts = [ "-Dclojure.compiler.direct-linking=true" ];
+            };
+            ExposedPorts = { "7881" = { }; };
+          };
+          contents = [ sqlite ];
+          extraCommands = "mkdir -m 0777 tmp";
         };
       in {
         packages = {
-          inherit http-server pubmed-search;
+          inherit http-server http-server-image pubmed-search;
           default = pubmed-search;
         };
         devShells.default = mkShell {
           buildInputs = [
             clj-nix.packages.${system}.deps-lock
             clojure
+            pkgs-unstable.flyctl
             my-python
             pubmed-search
             srvc.packages.${system}.default
