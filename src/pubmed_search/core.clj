@@ -277,23 +277,23 @@
   (str "https://www.ncbi.nlm.nih.gov/pubmed/" pmid))
 
 (defn doc-abstract [doc-json]
-(-> doc-json
-    :PubmedArticle
-    :MedlineCitation
-    :Article
-    (as->
-     $
-     (cond
-       (map? $) (:Abstract $)
-       (seq? $) (map :Abstract $))
-      (cond
-        (map? $) (:AbstractText $)
-        (seq? $) (map :AbstractText $))
-      (cond
-        (string? $) [$]
-        (seq? $) (keep identity $))
-      (when $
-        (str/join "\n\n" $)))))
+  (-> doc-json
+      :PubmedArticle
+      :MedlineCitation
+      :Article
+      (as->
+       $
+       (cond
+         (map? $) (:Abstract $)
+         (seq? $) (map :Abstract $))
+        (cond
+          (map? $) (:AbstractText $)
+          (seq? $) (map :AbstractText $))
+        (cond
+          (string? $) [$]
+          (seq? $) (keep identity $))
+        (when $
+          (str/join "\n\n" $)))))
 
 (defn doc-title [doc-json]
   (-> doc-json
