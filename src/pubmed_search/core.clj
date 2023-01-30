@@ -138,8 +138,10 @@
 (defn get-search-results [opts query]
   (or
    (get-search-results-cache opts query)
-   (->> (get-search-results-api opts query)
-        (put-search-results-cache opts query))))
+   (let [results (get-search-results-api opts query)]
+     (future
+       (put-search-results-cache opts query results))
+     results)))
 
 (defn get-fetches-api [{:keys [api-key hato]} pmids]
   (-> (api-get
@@ -180,19 +182,20 @@
 
 (defn put-fetches-cache [{:keys [sqlite]} fetches]
   (when (seq fetches)
-    (jdbc/with-transaction [tx (:datasource sqlite)]
-      (execute-one!
-       tx
-       {:delete-from :pubmed-fetch
-        :where [:in :pmid (map fetch-id fetches)]})
-      (execute-one!
-       tx
-       {:insert-into :pubmed-fetch
-        :values
-        (map
-         #(do {:pmid (fetch-id %) :fetch (xml/emit-str %)})
-         fetches)})))
-  fetches)
+    (let [fetches (doall fetches)]
+      (jdbc/with-transaction [tx (:datasource sqlite)]
+        (execute-one!
+         tx
+         {:delete-from :pubmed-fetch
+          :where [:in :pmid (map fetch-id fetches)]})
+        (execute-one!
+         tx
+         {:insert-into :pubmed-fetch
+          :values
+          (map
+           #(do {:pmid (fetch-id %) :fetch (xml/emit-str %)})
+           fetches)}))
+      fetches)))
 
 (defn get-fetches-seq [{:keys [chunk-size] :as opts} cached pmid-set]
   (lazy-seq
@@ -208,7 +211,13 @@
 
 (defn get-fetches [opts pmids]
   (when (seq pmids)
-    (get-fetches-seq opts (get-fetches-cache opts pmids) (set pmids))))
+    ;; Chunk here to produce the first documents more quickly
+    (mapcat
+     (fn [chunk]
+       (get-fetches-seq opts (get-fetches-cache opts chunk) (set chunk)))
+     (concat
+      [(take 50 pmids)]
+      (partition-all 1000 (drop 50 pmids))))))
 
 (defn get-config [filename]
   (if-let [resource (if (.exists (io/file filename))
