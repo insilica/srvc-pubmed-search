@@ -343,7 +343,7 @@
      :type "document"}))
 
 (defn get-home [{:keys [query-params]} opts]
-  (let [q (get query-params "q")]
+  (let [q (some-> (get query-params "q") str/trim str/lower-case)]
     (if (seq q)
       (->> (get-search-results opts q)
            (get-fetches opts)
