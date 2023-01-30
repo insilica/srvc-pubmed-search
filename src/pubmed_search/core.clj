@@ -77,14 +77,26 @@
                  :body
                  xml/parse-str
                  :content)
-        ct (-> (tag-val :Count docs) :content first parse-long)
-        ret-start (-> (tag-val :RetStart docs) :content first parse-long)
-        id-list (-> (tag-val :IdList docs) :content)
-        next-start (+ ret-start (count id-list))]
-    (concat
-     (mapcat :content id-list)
-     (when (and (seq docs) (> ct next-start))
-       (get-search-results-api opts query next-start)))))
+        error-list (tag-val :ErrorList docs)]
+    (cond
+      (-> docs first :tag (= :ERROR))
+      (throw (ex-info "PubMed API error" {:error docs}))
+
+      (tag-val :PhraseNotFound (:content error-list))
+      nil
+
+      error-list
+      (throw (ex-info "PubMed API query error" {:error-list error-list}))
+
+      :else
+      (let [ct (-> (tag-val :Count docs) :content first parse-long)
+            ret-start (-> (tag-val :RetStart docs) :content first parse-long)
+            id-list (-> (tag-val :IdList docs) :content)
+            next-start (+ ret-start (count id-list))]
+        (lazy-cat
+         (mapcat :content id-list)
+         (when (and (seq docs) (> ct next-start) (<= 9998 next-start))
+           (get-search-results-api opts query next-start)))))))
 
 (defn get-search-results-cache
   "Returns cached search results. Returns nil if the query is not cached.
@@ -108,19 +120,20 @@
       (seq results))))
 
 (defn put-search-results-cache [{:keys [sqlite]} query results]
-  (jdbc/with-transaction [tx (:datasource sqlite)]
-    (execute-one!
-     tx
-     {:delete-from :pubmed-search-result
-      :where [:= :term query]})
-    (execute-one!
-     tx
-     {:insert-into :pubmed-search-result
-      :values
-      (if (seq results)
-        (map #(do {:pmid % :term query}) results)
-        [{:pmid nil :term query}])}))
-  results)
+  (let [results (doall results)]
+    (jdbc/with-transaction [tx (:datasource sqlite)]
+      (execute-one!
+       tx
+       {:delete-from :pubmed-search-result
+        :where [:= :term query]})
+      (execute-one!
+       tx
+       {:insert-into :pubmed-search-result
+        :values
+        (if (seq results)
+          (map #(do {:pmid % :term query}) results)
+          [{:pmid nil :term query}])}))
+    results))
 
 (defn get-search-results [opts query]
   (or
