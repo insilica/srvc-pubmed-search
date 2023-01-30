@@ -1,3 +1,18 @@
 {
-  "nixEnvSelector.nixFile": "${workspaceRoot}/shell.nix",
+  "calva.evalOnSave": true,
+  "calva.paredit.strictPreventUnmatchedClosingBracket": true,
+  "editor.formatOnPaste": true,
+  "editor.formatOnSave": true,
+  "editor.formatOnType": true,
+  "calva.replConnectSequences": [
+    {
+      "name": "Pubmed HTTP Server",
+      "projectType": "deps.edn",
+      "menuSelections": {
+        "cljAliases": []
+      },
+      "afterCLJReplJackInCode": "(do ((requiring-resolve 'pubmed-search.core/start!)) (in-ns 'pubmed-search.core))",
+      "cljsType": "none"
+    }
+  ]
 }
