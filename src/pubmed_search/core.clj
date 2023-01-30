@@ -249,7 +249,8 @@
        instance))})
 
 (def sql-create-schema
-  [; A null pmid is used to indicate empty search results
+  ["PRAGMA journal_mode=WAL"
+   ; A null pmid is used to indicate empty search results
    "CREATE TABLE IF NOT EXISTS pubmed_search_result (
       id INTEGER PRIMARY KEY,
       term TEXT NOT NULL,
