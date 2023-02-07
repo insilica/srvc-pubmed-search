@@ -299,6 +299,22 @@
 (defn article-uri [pmid]
   (str "https://www.ncbi.nlm.nih.gov/pubmed/" pmid))
 
+(defn text-contents [json-seq]
+  (if (string? json-seq)
+    [json-seq]
+    (mapcat
+     (fn [x]
+       (cond
+         (char? x) [x]
+         (string? x) [x]
+         (empty? x) nil
+         (map? x) (mapcat text-contents (vals x))
+         (seq? x) (mapcat text-contents x)))
+     json-seq)))
+
+(defn text-content [json-seq]
+  (some->> json-seq text-contents seq (str/join "")))
+
 (defn doc-abstract [doc-json]
   (-> doc-json
       :PubmedArticle
@@ -314,7 +330,8 @@
           (seq? $) (map :AbstractText $))
         (cond
           (string? $) [$]
-          (seq? $) (keep identity $))
+          (seq? $) (->> (map text-content $)
+                        (keep identity)))
         (when $
           (str/join "\n\n" $)))))
 
@@ -330,7 +347,8 @@
          (seq? $) (map :ArticleTitle $))
         (cond
           (string? $) [$]
-          (seq? $) (keep identity $))
+          (seq? $) (->> (map text-content $)
+                        (keep identity)))
         (when $
           (str/join "\n\n" $)))))
 
